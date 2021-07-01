@@ -1,0 +1,37 @@
+name: Check Pull Request
+
+on:
+  pull_request:
+    branches: [ master ]
+
+env:
+  AZURE_WEBAPP_NAME: cicdmeetup
+  AZURE_WEBAPP_PACKAGE_PATH: '.'
+  NODE_VERSION: '14.x'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          yarn --frozen-lockfile
+
+      - name: Run tests
+        run: |
+          npm test --if-present
+ 
+      - name: Deploy to Azure WebApp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}    
